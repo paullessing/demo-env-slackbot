@@ -4,10 +4,17 @@ provider:
   name: aws
   runtime: nodejs6.10
   region: eu-west-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:Scan
+      Resource: arn:aws:dynamodb:eu-west-1:*:*
 
 functions:
   push:
-    handler: githubPush.post
+    handler: handler.post
     events:
       - http:
           path: push
@@ -16,3 +23,25 @@ functions:
             parameters:
               headers:
                 x-hub-signature: true
+  getAll:
+    handler: handler.getAll
+    events:
+      - http:
+          path: all
+          method: get
+
+resources:
+  Resources:
+    environmentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: environments
+        AttributeDefinitions:
+          - AttributeName: environment
+            AttributeType: S
+        KeySchema:
+          - AttributeName: environment
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

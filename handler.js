@@ -1,6 +1,7 @@
 const https = require('https');
 const crypto = require('crypto');
 const config = require('./config/config');
+const database = require('./database');
 
 function postGithubPush(event, context, callback) {
   const actualHash = event && event.headers &&
@@ -57,11 +58,25 @@ function postGithubPush(event, context, callback) {
     return;
   }
   const env = match[1];
+  const username = body.sender.login;
+  const repo = body.repository.name;
 
+  Promise.all([
+    postToSlack(env, username, repo),
+    database.markEnvironment(username, env, new Date())
+  ])
+    .then(() => {
+      done(null, { statusCode: 204 });
+    }, (err) => {
+      done(null, { statusCode: 503, body: JSON.stringify(error) });
+    });
+}
+
+function postToSlack(env, username, repository) {
   const data = JSON.stringify({
     channel: config.channel,
     username: config.username,
-    text: `${body.sender.login} is using *${env}*/${body.repository.name}`
+    text: `${username} is using *${env}*/${repository}`
   });
 
   const options = {
@@ -76,27 +91,53 @@ function postGithubPush(event, context, callback) {
   };
   console.log('Making request', options);
 
-  const req = https.request(options, (res) => {
-    let data = '';
-    res.setEncoding('utf8');
-    res.on('data', function (chunk) {
-      data += chunk.toString();
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.setEncoding('utf8');
+      res.on('data', function (chunk) {
+        data += chunk.toString();
+      });
+      res.on('end', function () {
+        console.log('DATA');
+        console.log(data);
+        resolve();
+      });
     });
-    res.on('end', function () {
-      console.log('DATA');
-      console.log(data);
-      callback(null, { statusCode: 204 });
+
+    req.on('error', (error) => {
+      console.error(error);
+      reject(error);
     });
+
+    req.write(data);
+
+    req.end();
   });
+}
 
-  req.on('error', (error) => {
-    console.error(error);
-    callback(null, { statusCode: 503, body: JSON.stringify(error) });
-  });
+function getAllActiveEnvironments() {
+  return database.getAllEnvironments()
+    .then((envs) => envs
+      .map((env) => Object.assign({}, env, { time: new Date(env.time) }))
+      .filter((env) => {
+        const time = env.time.getTime();
+        const now = new Date().getTime();
+        return now - time < 8 * 3600 * 1000; // More than 8 hours since deploy
+      })
+    );
+}
 
-  req.write(data);
-
-  req.end();
+function getAll(event, context, callback) {
+  console.log('Fetching all data');
+  getAllActiveEnvironments()
+    .then((data) => {
+      console.log('Data', data);
+      callback(null, { statusCode: 200, body: JSON.stringify(data) });
+    }, (error) => {
+      callback(null, { statusCode: 500, body: JSON.stringify(error.toString()) });
+    });
 }
 
 module.exports.post = postGithubPush;
+module.exports.getAll = getAll;
