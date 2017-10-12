@@ -1,4 +1,4 @@
 .idea/
-/bin/deploy
+/bin/deploy*
 /.serverless
 /config/config.json
