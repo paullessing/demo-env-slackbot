@@ -1,24 +1,27 @@
 const crypto = require('crypto');
 const config = require('./config/config');
 
-exports.getGithubPushData = async function verifyValidRequest(event) {
-  await verifyHash(event.headers, event.body);
-
-  if (event.body === 'isup') {
-    return Promise.reject({ statusCode: 200, body: '"I am up"' });
-  }
-
-  const body = await parseBody(event.body);
-  const environment = await getEnvironment(body.ref);
-
-  const username = body.sender.login;
-  const repository = body.repository.name;
-
-  return {
-    environment,
-    username,
-    repository
-  }
+exports.getGithubPushData = function verifyValidRequest(event) {
+  return Promise.resolve()
+    .then(() => verifyHash(event.headers, event.body))
+    .then(() => {
+      if (event.body === 'isup') {
+        return Promise.reject({ statusCode: 200, body: '"I am up"' });
+      }
+    })
+    .then(() => parseBody(event.body))
+    .then((body) => {
+      return getEnvironment(body.ref)
+        .then((environment) => {
+          const username = body.sender.login;
+          const repository = body.repository.name;
+          return {
+            environment,
+            username,
+            repository
+          }
+        });
+    });
 };
 
 function verifyHash(headers, body) {
