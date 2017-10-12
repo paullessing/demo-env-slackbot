@@ -29,6 +29,12 @@ functions:
       - http:
           path: all
           method: get
+  post:
+    handler: handler.slackCommand
+    events:
+      - http:
+          path: slack/command
+          method: post
 
 resources:
   Resources:
