@@ -14,6 +14,8 @@ exports.handle = function handle(event) {
   return environments.getActive()
     .then((envs) => ({
       statusCode: 200,
-      body: `Active environments: ${envs.map((env) => `*${env.environment}* (${env.username} since ${formatTime(env.time)})`).join(', ')}`
+      body: envs.length ?
+        `Active environments: ${envs.map((env) => `*${env.environment}* (${env.username} since ${formatTime(env.time)})`).join(', ')}` :
+        'Everything is free, take one!'
     }));
-}
+};

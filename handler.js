@@ -6,9 +6,11 @@ const slackCommand = require('slack-command');
 
 function handleRequest(handler) {
   return function(event, context, callback) {
+    console.log('Handling request');
     return Promise.resolve()
       .then(() => handler(event))
       .then((result) => {
+        console.log('Success', result);
         if (result && result.statusCode) {
           callback(null, result);
         } else if (result) {
@@ -17,6 +19,7 @@ function handleRequest(handler) {
           callback(null, { statusCode: 204 });
         }
       }).catch((e) => {
+        console.log('Failure', e);
         if (e.statusCode) {
           callback(null, e);
         } else {

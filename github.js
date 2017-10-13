@@ -11,6 +11,7 @@ exports.getGithubPushData = function verifyValidRequest(event) {
     })
     .then(() => parseBody(event.body))
     .then((body) => {
+      console.log('Body', body);
       return getEnvironment(body.ref)
         .then((environment) => {
           const username = body.sender.login;
@@ -25,8 +26,8 @@ exports.getGithubPushData = function verifyValidRequest(event) {
 };
 
 function verifyHash(headers, body) {
-  const actualHash = event && event.headers &&
-    (event.headers['X-Hub-Signature'] || event.headers['x-hub-signature']) ||
+  const actualHash = headers &&
+    (headers['X-Hub-Signature'] || headers['x-hub-signature']) ||
     '';
   if (!actualHash) {
     console.log('Missing Hash');
@@ -34,7 +35,7 @@ function verifyHash(headers, body) {
   }
 
   const shasum = crypto.createHmac('sha1', config.githubSecret);
-  shasum.update(event.body || '');
+  shasum.update(body || '');
   const expectedHash = 'sha1=' + shasum.digest('hex');
 
   if (expectedHash.length !== actualHash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(actualHash))) {
@@ -51,12 +52,12 @@ function parseBody(rawBody) {
     return Promise.reject({ statusCode: 400, body: '"Malformed Request"' });
   }
 
-  return Promise.resolve(() => {
-    return JSON.parse(rawBody);
-  })
+  return Promise.resolve().then(() =>
+    JSON.parse(rawBody)
+  )
   .catch((error) => {
     console.log('Failed to parse body');
-    console.log(error)
+    console.log(error);
     return Promise.reject({ statusCode: 400, body: '"Malformed Request"' });
   });
 }
@@ -67,8 +68,9 @@ function getEnvironment(ref) {
   }
 
   const branchRegex = /^refs\/heads\/demo-([^\/]+)$/i;
-  const match = branchRegex.exec(body.ref);
+  const match = branchRegex.exec(ref);
   if (!match) {
+    console.log('Ignoring non-matching environment ' + ref);
     return Promise.reject({ statusCode: 204 });
   }
 

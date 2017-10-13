@@ -2,6 +2,12 @@ const https = require('https');
 const config = require('./config/config');
 
 exports.post = function post(text) {
+  const data = JSON.stringify({
+    channel: config.channel,
+    username: config.username,
+    text: text
+  });
+
   const options = {
     host: 'hooks.slack.com',
     port: 443,
@@ -13,11 +19,6 @@ exports.post = function post(text) {
     }
   };
   console.log('Making request', options);
-  const data = {
-    channel: config.channel,
-    username: config.username,
-    text: text
-  };
 
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
@@ -38,7 +39,7 @@ exports.post = function post(text) {
       reject(error);
     });
 
-    req.write(JSON.stringify(data));
+    req.write(data);
 
     req.end();
   });
