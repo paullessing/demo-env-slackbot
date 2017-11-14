@@ -1,8 +1,9 @@
 const database = require('./database');
 const slack = require('./slack');
 const github = require('./github');
-const environments = require('environments');
-const slackCommand = require('slack-command');
+const users = require('./users');
+const environments = require('./environments');
+const slackCommand = require('./slack-command');
 
 function handleRequest(handler) {
   return function(event, context, callback) {
@@ -34,8 +35,8 @@ function onGithubPush(event) {
   return Promise.resolve()
     .then(() => github.getGithubPushData(event))
     .then((data) => Promise.all([
-      slack.post(`${data.username} is using *${data.environment}*/${data.repository}`),
-      database.markEnvironment(data.username, data.environment, new Date())
+      slack.post(`${users.getCanonicalName(data.username)} is using *${data.environment}*/${data.repository}`),
+      database.markEnvironment(users.getCanonicalName(data.username), data.environment, new Date())
     ]))
     .then(() => null);
 }

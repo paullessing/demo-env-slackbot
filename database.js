@@ -55,12 +55,21 @@ exports.getAllEnvironments = function getAllEnvironments() {
   });
 };
 
+/**
+ * Mark an environment as busy.
+ * @param username
+ * @param environment
+ * @param time Can be empty to un-mark
+ * @returns {Promise}
+ */
 exports.markEnvironment = function markEnvironment(username, environment, time) {
   const item = {
     environment,
-    username,
-    time: time.toString()
+    username
   };
+  if (time) {
+    item.time = time.toString();
+  }
 
   return new Promise((resolve, reject) => {
     const itemToInsert = {
