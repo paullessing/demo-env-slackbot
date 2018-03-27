@@ -7,7 +7,12 @@ exports.isValid = function isValid(name) {
     'corona',
     'doombar',
     'estrella',
-    'fosters'
+    'fruli',
+    'gambrinus',
+    'holba',
+
+    'staging',
+    'demo'
   ].indexOf((name || '').toLowerCase()) >= 0;
 };
 

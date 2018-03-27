@@ -1,7 +1,20 @@
 const crypto = require('crypto');
 const config = require('./config/config');
+const slack = require('./slack');
+const users = require('./users');
+const database = require('./database');
 
-exports.getGithubPushData = function verifyValidRequest(event) {
+exports.onPush = function onPush(event) {
+  return Promise.resolve()
+    .then(() => getGithubPushData(event))
+    .then((data) => Promise.all([
+      slack.post(`${users.getCanonicalName(data.username)} is using *${data.environment}*/${data.repository}`),
+      database.markEnvironment(users.getCanonicalName(data.username), data.environment, new Date())
+    ]))
+    .then(() => null);
+};
+
+function getGithubPushData(event) {
   return Promise.resolve()
     .then(() => verifyHash(event.headers, event.body))
     .then(() => {
