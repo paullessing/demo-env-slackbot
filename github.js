@@ -4,14 +4,18 @@ const slack = require('./slack');
 const users = require('./users');
 const database = require('./database');
 
-exports.onPush = function onPush(event) {
-  return Promise.resolve()
-    .then(() => getGithubPushData(event))
-    .then((data) => Promise.all([
-      slack.post(`${users.getCanonicalName(data.username)} is using *${data.environment}*/${data.repository}`),
-      database.markEnvironment(users.getCanonicalName(data.username), data.environment, new Date())
-    ]))
-    .then(() => null);
+exports.onPush = async function onPush(event) {
+  const data = await getGithubPushData(event);
+  const current = await database.getEnvironment(data.environment);
+  let claimDurationHours = current && current.claimDurationHours || 8;
+  if (current && (current.time.getTime() + current.claimDurationHours * 3600 * 1000 < new Date()).getTime() ) {
+    claimDurationHours = 8;
+  }
+  await Promise.all([
+    slack.post(`${users.getCanonicalName(data.username)} is using *${data.environment}*/${data.repository}`),
+    database.markEnvironment(users.getCanonicalName(data.username), data.environment, new Date(), claimDurationHours)
+  ]);
+  return null;
 };
 
 function getGithubPushData(event) {

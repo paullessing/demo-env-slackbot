@@ -89,3 +89,31 @@ exports.markEnvironment = function markEnvironment(username, environment, time, 
     });
   })
 };
+
+exports.getEnvironment = function getEnvironment(environment) {
+  return new Promise((resolve, reject) => {
+    const itemToFetch = {
+      'TableName': tableName,
+      'Key': { environment }
+    };
+
+    console.log('Getting:', itemToFetch);
+
+    docClient.get(itemToFetch, (error, data) => {
+      console.log('Finished getting' + (error ? ' with error' : ''), error);
+      if (error) {
+        reject(error);
+      } else {
+        const item = data.Item;
+
+        const result = {
+          environment: item.environment,
+          username: item.username,
+          time: new Date(item.time),
+          claimDurationHours: item.claimDurationHours
+        };
+        resolve(result);
+      }
+    });
+  })
+};
