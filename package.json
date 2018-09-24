@@ -4,5 +4,11 @@
   "main": "index.js",
   "author": "Paul Lessing <paul@paullessing.com>",
   "license": "MIT",
-  "private": false
+  "private": false,
+  "scripts": {
+    "deploy": "sls deploy"
+  },
+  "devDependencies": {
+    "serverless": "^1.32.0"
+  }
 }

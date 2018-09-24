@@ -2,3 +2,4 @@
 /bin/deploy*
 /.serverless
 /config/config.json
+node_modules/

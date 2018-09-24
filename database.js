@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
 
-const tableName = exports.tableName = 'environments';
+const tableName = exports.tableName = 'demo-env-slackbot.environments';
 
 // exports.getItem = function getItem(id, done) {
 //   const params = {
@@ -60,16 +60,16 @@ exports.getAllEnvironments = function getAllEnvironments() {
  * @param username
  * @param environment
  * @param time Can be empty to un-mark
+ * @param claimDurationHours {number} optional
  * @returns {Promise}
  */
-exports.markEnvironment = function markEnvironment(username, environment, time) {
+exports.markEnvironment = function markEnvironment(username, environment, time, claimDurationHours) {
   const item = {
     environment,
-    username
+    username,
+    time: time.toString(),
+    claimDurationHours
   };
-  if (time) {
-    item.time = time.toString();
-  }
 
   return new Promise((resolve, reject) => {
     const itemToInsert = {

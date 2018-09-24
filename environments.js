@@ -17,15 +17,14 @@ exports.isValid = function isValid(name) {
 };
 
 exports.getActive = function getActive() {
+  const now = new Date().getTime();
   return Promise.resolve()
     .then(() => database.getAllEnvironments())
     .then((envs) => envs
-      .filter((env) => !!env.time)
       .map((env) => Object.assign({}, env, { time: new Date(env.time) }))
       .filter((env) => {
         const time = env.time.getTime();
-        const now = new Date().getTime();
-        return now - time < 8 * 3600 * 1000; // More than 8 hours since deploy
+        return now - time < env.claimDurationHours * 3600 * 1000; // More than n hours since deploy
       })
     );
-}
+};
