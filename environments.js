@@ -1,19 +1,21 @@
 const database = require('./database');
 
-exports.isValid = function isValid(name) {
-  return [
-    'amstel',
-    'budvar',
-    'corona',
-    'doombar',
-    'estrella',
-    'fruli',
-    'gambrinus',
-    'holba',
+const ENVIRONMENTS = exports.ENVIRONMENTS = Object.freeze([
+  'amstel',
+  'budvar',
+  'corona',
+  'doombar',
+  'estrella',
+  'fruli',
+  'gambrinus',
+  'holba',
 
-    'staging',
-    'demo'
-  ].indexOf((name || '').toLowerCase()) >= 0;
+  'staging',
+  'demo'
+]);
+
+exports.isValid = function isValid(name) {
+  return ENVIRONMENTS.indexOf((name || '').toLowerCase()) >= 0;
 };
 
 exports.getActive = function getActive() {

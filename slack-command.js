@@ -38,8 +38,11 @@ exports.handle = async function handle(event) {
       .then(() => ({ statusCode: 200 }));
   }
 
-  const listMatch = (/^list($|\s)/i).exec(command);
+  const listMatch = (/^list\s?(.*)$/i).exec(command);
   if (listMatch) {
+    const args = listMatch[1] ? listMatch[1].split(/\s+/g) : [];
+    const showAll = args.indexOf('all') >= 0 || args.indexOf('--all') >= 0;
+
     const now = new Date();
     function formatTime(time) {
       if (time.getDay() !== now.getDay() || time.getMonth() !== now.getMonth()) {
@@ -48,19 +51,55 @@ exports.handle = async function handle(event) {
       return time.toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: 'numeric', minute: '2-digit', hour12: false });
     }
 
+    const formatHours = (hours) => {
+      if (hours < 24) {
+        return `${hours}h`;
+      } else {
+        const days = Math.floor(hours / 24);
+        const remainingHours = hours % 24;
+        if (remainingHours === 0) {
+          return `${days}d`;
+        } else {
+          return `${days}d ${remainingHours}h`;
+        }
+      }
+    };
+
+    const formatActiveEnvironment = (env) =>
+      `:wrench: *${env.environment}* (_${users.getCanonicalName(env.username)}_ since ${formatTime(env.time)} for ${formatHours(env.claimDurationHours)})`;
+    const formatInactiveEnvironment = (env) =>
+      `:heavy_check_mark: *${env}* - _free_`;
+
     return environments.getActive()
-      .then((envs) => ({
-        statusCode: 200,
-        body: envs.length ?
-          `Active environments:\n${envs.sort(sortEnvironments).map((env) => `*${env.environment}* (${users.getCanonicalName(env.username)} since ${formatTime(env.time)} for ${env.claimDurationHours}h)`).join('\n')}` :
-          'Everything is free, take one!'
-      }));
+      .then((envs) => {
+        if (envs.length || showAll) {
+          const body = `${showAll ? 'Available' : 'Active'} environments:\n${environments.ENVIRONMENTS.map((env) => {
+            const active = envs.find((activeEnv) => activeEnv.environment === env);
+            if (active) {
+              return formatActiveEnvironment(active);
+            } else if (showAll) {
+              return formatInactiveEnvironment(env);
+            } else {
+              return null;
+            }
+          }).filter(x => !!x).join('\n')}`;
+          return {
+            statusCode: 200,
+            body
+          };
+        } else {
+          return {
+            statusCode: 200,
+            body: 'Everything is free, take one!'
+          }
+        }
+      });
   }
 
   return Promise.resolve({
     statusCode: 200,
     body: '*How to use:*\n' +
-    '`list`: Show active environments\n' +
+    '`list [all]`: Show active environments\n' +
     '`claim <env>`: Mark environment as _in use_\n' +
     '`free <env>`: Mark environment as no longer used\n' +
     '`help`: Show this help'
