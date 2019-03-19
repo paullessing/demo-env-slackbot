@@ -31,3 +31,4 @@ function handleRequest(handler) {
 module.exports.post = handleRequest(github.onPush);
 module.exports.getAll = handleRequest(environments.getActive);
 module.exports.slackCommand = handleRequest(slackCommand.handle);
+module.exports.autoclaim = handleRequest(environments.autoclaim);

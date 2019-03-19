@@ -35,6 +35,12 @@ functions:
       - http:
           path: slack/command
           method: post
+  autoclaim:
+    handler: handler.autoclaim
+    events:
+      - http:
+          path: autoclaim
+          method: post
 
 resources:
   Resources:
