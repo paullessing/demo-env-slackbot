@@ -51,14 +51,14 @@ async function autoclaim(event) {
     for (const envName of DEMO_ENVIRONMENTS) {
       if (activeEnvironments.indexOf(envName) < 0) {
         await database.markEnvironment(user, envName, new Date(), 8);
-        return { statuscode: 200, body: envName, headers: { 'Content-Type': 'application/text' } };
+        return { statusCode: 200, body: envName, headers: { 'Content-Type': 'application/text' } };
       }
     }
 
-    return { statuscode: 409 };
+    return { statusCode: 409 };
   } catch (e) {
     console.log(e);
-    return { statuscode: 400, body: '' };
+    return { statusCode: 400, body: '' };
   }
 }
 
