@@ -48,13 +48,13 @@ async function handleClaim(user, env, timeString) {
 
   await database.markEnvironment(user, env, new Date(), claimDurationHours);
   await slack.post(`${user} is using *${env}* for the next ${claimDurationHours} hours`);
-  return { statusCode: 200 };
+  return { statusCode: 200, body: `Successfully claimed *${env}* for the next ${claimDurationHours} hours.` };
 }
 
 async function handleRelease(user, env) {
   await database.markEnvironment(user, env, new Date(), 0);
   await slack.post(`${user} is no longer using *${env}*`);
-  return { statusCode: 200 };
+  return { statusCode: 200, body: `Freed *${env}*.` };
 }
 
 async function handleList(argString) {
