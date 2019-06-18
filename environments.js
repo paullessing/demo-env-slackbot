@@ -9,6 +9,9 @@ const DEMO_ENVIRONMENTS = [
   'fruli',
   'gambrinus',
   'holba',
+  'indie',
+  'joker',
+  'korev',
 ];
 
 const ENVIRONMENTS = Object.freeze([
